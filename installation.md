@@ -1,11 +1,3 @@
-# PBL_Project_15
-
-Project 15: AWS CLOUD SOLUTION FOR 2 COMPANY WEBSITES USING A REVERSE PROXY TECHNOLOGY.
-
-https://ipinfo.io/
-
-Install MobaXterm on Window [https://www.youtube.com/watch?v=G8dSQhuUu8Y&t=7s]
-
 order of creation
 create security group first
 create certificate
