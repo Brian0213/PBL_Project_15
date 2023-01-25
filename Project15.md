@@ -215,6 +215,8 @@ configure selinux policies for the webservers and nginx servers:
 
 - Setting up self-signed certificate for the nginx instance:
 
+`cd`
+
 `sudo mkdir /etc/ssl/private`
 
 `sudo chmod 700 /etc/ssl/private`
@@ -285,6 +287,10 @@ configure selinux policies for the webservers and nginx servers:
 
 [Update the etc file](./images/vi-etc-httpd.PNG)
 
+- Setting up self-signed certificate for the apache nginx instance:
+
+`vi /etc/httpd/conf.d/ssl.conf`
+
 Creating AMI for the Instances:
 
 Webserver:
@@ -302,3 +308,10 @@ Nginx:
 
 - Nginx Launch Template:
 
+Create tooling and wordpress databases:
+
+`mysql -h acs-database.cilcnl2h4q0u.us-east-2.rds.amazonaws.com -u ACSadmin -p`
+
+- Enter Password
+
+[Tooling and WordPress Databases](./images/tool-wordp-dbs.PNG)
