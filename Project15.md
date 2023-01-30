@@ -295,23 +295,197 @@ Creating AMI for the Instances:
 
 Webserver:
 
+[Webserver AMI](./images/webserver-ami-config.PNG)
+
+[Webserver AMI](./images/webserver-ami-success.PNG)
+
 Bastion:
+
+[Bastion AMI](./images/bastion-ami-config.PNG)
+
+[Bastion AMI](./images/bastion-ami-success.PNG)
 
 Nginx:
 
+[Nginx AMI](./images/nginx-ami-config.PNG)
+
+[Nginx AMI](./images/nginx-ami-success.PNG)
+
 - Create Target Group:
 
+[Webserver AMI](./images/webserver-ami-config.PNG)
+
+[Nginx Target Group](./images/nginx-targetgrp-create.PNG)
+
+[Nginx Target Group](./images/nginx-targetgrp-create2.PNG)
+
+[Nginx Target Group](./images/nginx-targetgrp-success.PNG)
+
+[Wordpress Target Group](./images/wordpress-targetgrp-create.PNG)
+
+[Wordpress Target Group](./images/wordpress-targetgrp-create2.PNG)
+
+[Wordpress Target Group](./images/wordpress-targetgrp-success.PNG)
+
+### CONFIGURE APPLICATION LOAD BALANCER (ALB)
+
+- Application Load Balancer To Route Traffic To NGINX
+
+Nginx EC2 Instances will have configurations that accepts incoming traffic only from Load Balancers. No request should go directly to Nginx servers. With this kind of setup, we will benefit from intelligent routing of requests from the ALB to Nginx servers across the 2 Availability Zones. We will also be able to offload SSL/TLS certificates on the ALB instead of Nginx. Therefore, Nginx will be able to perform faster since it will not require extra compute resources to valifate certificates for every request.
+
+Create an Internet facing ALB
+Ensure that it listens on HTTPS protocol (TCP port 443)
+Ensure the ALB is created within the appropriate VPC | AZ | Subnets
+Choose the Certificate from ACM
+Select Security Group
+Select Nginx Instances as the target group
+
+- Since the webservers are configured for auto-scaling, there is going to be a problem if servers get dynamically scalled out or in. Nginx will not know about the new IP addresses, or the ones that get removed. Hence, Nginx will not know where to direct the traffic.
+
+To solve this problem, we must use a load balancer. But this time, it will be an internal load balancer. Not Internet facing since the webservers are within a private subnet, and we do not want direct access to them.
+
+Create an Internal ALB
+Ensure that it listens on HTTPS protocol (TCP port 443)
+Ensure the ALB is created within the appropriate VPC | AZ | Subnets
+Choose the Certificate from ACM
+Select Security Group
+Select webserver Instances as the target group
+Ensure that health check passes for the target group
+NOTE: This process must be repeated for both WordPress and Tooling websites.
 
 - Create LoadBalancers:
 
+[Load Balancer](./images/loadbalancer-create1.PNG)
+
+[Load Balancer](./images/loadbalancer-create2.PNG)
+
+[Load Balancer](./images/loadbalancer-create3.PNG)
+
+[Load Balancer Int](./images/loadbalancer-int-create1.PNG)
+
+[Load Balancer Int](./images/loadbalancer-int-create2.PNG)
+
+[Load Balancer Int](./images/loadbalancer-int-create3.PNG)
+
+[Load Balancer Int](./images/loadbalancer-int-success.PNG)
+
+[Load Balancer Succcess](./images/loadbalancer-success.PNG)
+
 - Bastion Launch Template:
+
+[Bastion launch Template](./images/bast-launc-temp-create1.PNG)
+
+[Bastion launch Template](./images/bast-launc-temp-create2.PNG)
+
+[Bastion launch Template](./images/bast-launc-temp-create3.PNG)
+
+[Bastion launch Template](./images/bast-launc-temp-create4.PNG)
+
+[Bastion launch Template Succcess](./images/bast-launc-temp-success.PNG)
 
 - Nginx Launch Template:
 
-Create tooling and wordpress databases:
+[Nginx launch Template](./images/nginx-launc-temp-create1.PNG)
+
+[Nginx launch Template](./images/nginx-launc-temp-create2.PNG)
+
+[Nginx launch Template](./images/nginx-launc-temp-create3.PNG)
+
+[Nginx launch Template](./images/nginx-launc-temp-create4.PNG)
+
+[Nginx launch Template Succcess](./images/nginx-launc-temp-success.PNG)
+
+- Tooling Launch Template:
+
+[Tooling launch Template](./images/tool-launc-temp-create1.PNG)
+
+[Tooling launch Template](./images/tool-launc-temp-create2.PNG)
+
+[Tooling launch Template](./images/tool-launc-temp-create3.PNG)
+
+[Tooling launch Template Succcess](./images/tool-launc-temp-success.PNG)
+
+- Wordpress Launch Template:
+
+[Wordpress launch Template](./images/wordp-launc-temp-create1.PNG)
+
+[Wordpress launch Template](./images/wordp-launc-temp-create2.PNG)
+
+[Wordpress launch Template](./images/wordp-launc-temp-create3.PNG)
+
+[Wordpress launch Template Succcess](./images/wordp-launc-temp-success.PNG)
+
+- Create a Relational database:
+
+[Relational Database Create](./images/create-rds-1.PNG)
+
+[Relational Database Create](./images/create-rds-2.PNG)
+
+[Relational Database Create](./images/create-rds-3.PNG)
+
+[Relational Database Create](./images/create-rds-4.PNG)
+
+[Relational Database Create](./images/create-rds-5.PNG)
+
+[Relational Database Create](./images/create-rds-6.PNG)
+
+[Relational Database Create](./images/create-rds-7.PNG)
+
+[Relational Database Create Success](./images/create-rds-success.PNG)
+
+#### Setup EFS
+
+Amazon Elastic File System (Amazon EFS) provides a simple, scalable, fully managed elastic Network File System (NFS) for use with AWS Cloud services and on-premises resources. In this project, we will utulize EFS service and mount filesystems on both Nginx and Webservers to store data.
+
+Create an EFS filesystem
+Create an EFS mount target per AZ in the VPC, associate it with both subnets dedicated for data layer
+Associate the Security groups created earlier for data layer.
+Create an EFS access point. (Give it a name and leave all other settings as default)
+
+[Create Elastic File System](./images/create-elas-filesys.PNG)
+
+[Create Elastic File System Success](./images/create-elas-success.PNG)
+
+##### Setup RDS
+
+Pre-requisite: Create a KMS key from Key Management Service (KMS) to be used to encrypt the database instance.
+
+Amazon Relational Database Service (Amazon RDS) is a managed distributed relational database service by Amazon Web Services. This web service running in the cloud designed to simplify setup, operations, maintenans & scaling of relational databases. Without RDS, Database Administrators (DBA) have more work to do, due to RDS, some DBAs have become jobless
+
+To ensure that yout databases are highly available and also have failover support in case one availability zone fails, we will configure a multi-AZ set up of RDS MySQL database instance. In our case, since we are only using 2 AZs, we can only failover to one, but the same concept applies to 3 Availability Zones. We will not consider possible failure of the whole Region, but for this AWS also has a solution – this is a more advanced concept that will be discussed in following projects.
+
+To configure RDS, follow steps below:
+
+Create a subnet group and add 2 private subnets (data Layer)
+Create an RDS Instance for mysql 8.*.*
+To satisfy our architectural diagram, you will need to select either Dev/Test or Production Sample Template. But to minimize AWS cost, you can select the Do not create a standby instance option under Availability & durability sample template (The production template will enable Multi-AZ deployment)
+Configure other settings accordingly (For test purposes, most of the default settings are good to go). In the real world, you will need to size the database appropriately. You will need to get some information about the usage. If it is a highly transactional database that grows at 10GB weekly, you must bear that in mind while configuring the initial storage allocation, storage autoscaling, and maximum storage threshold.
+Configure VPC and security (ensure the database is not available from the Internet)
+Configure backups and retention
+Encrypt the database using the KMS key created earlier
+Enable CloudWatch monitoring and export Error and Slow Query logs (for production, also include Audit)
+Note This service is an expensinve one. Ensure to review the monthly cost before creating. (DO NOT LEAVE ANY SERVICE RUNNING FOR LONG)
+
+[KMS](./images/rds-key-users.PNG)
+
+[KMS](./images/rds-subnet-config.PNG)
+
+[KMS](./images/rds-subnet-success.PNG)
+
+[KMS](./images/review-key-configure.PNG)
+
+[Vpc Create](./images/create-vpc.PNG)
+
+- Create tooling and wordpress databases:
+
+[Tooling and WordPress Databases](./images/tool-wordp-dbs.PNG)
 
 `mysql -h acs-database.cilcnl2h4q0u.us-east-2.rds.amazonaws.com -u ACSadmin -p`
 
-- Enter Password
+- Enter Password:
 
-[Tooling and WordPress Databases](./images/tool-wordp-dbs.PNG)
+- 
+
+[Success](./images/url-success.PNG)
+
+[Tooling Url Success](./images/tooling-r-success.PNG)
