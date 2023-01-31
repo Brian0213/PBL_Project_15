@@ -153,6 +153,66 @@ Application Load Balancer: ALB will be available from the Internet.
 
 Set Up Compute Resources for Bastion:
 
+Provision the EC2 Instances for Bastion
+Create an EC2 Instance based on CentOS Amazon Machine Image (AMI) per each Availability Zone in the same Region and same AZ where you created Nginx server
+Ensure that it has the following software installed
+
+python
+ntp
+net-tools
+vim
+wget
+telnet
+epel-release
+htop
+Associate an Elastic IP with each of the Bastion EC2 Instances
+
+Create an AMI out of the EC2 instance
+
+Prepare Launch Template For Bastion (One per subnet)
+
+Make use of the AMI to set up a launch template
+
+Ensure the Instances are launched into a public subnet
+
+Assign appropriate security group
+
+Configure Userdata to update yum package repository and install Ansible and git
+
+Configure Target Groups
+
+Select Instances as the target type
+
+Ensure the protocol is TCP on port 22
+
+Register Bastion Instances as targets
+
+Ensure that health check passes for the target group
+
+Configure Autoscaling For Bastion
+
+Select the right launch template
+
+Select the VPC
+
+Select both public subnets
+
+Enable Application Load Balancer for the AutoScalingGroup (ASG)
+
+Select the target group you created before
+
+Ensure that you have health checks for both EC2 and ALB
+
+The desired capacity is 2
+
+Minimum capacity is 2
+
+Maximum capacity is 4
+
+Set scale out if CPU utilization reaches 90%
+
+Ensure there is an SNS topic to send scaling notifications
+
 - Change to super user
 
 `sudo su -`
@@ -170,6 +230,67 @@ Run the commands below:
 `systemctl enable chronyd`
 
 Set Up Compute Resources for Nginx:
+
+Provision EC2 Instances for Nginx
+Create an EC2 Instance based on CentOS Amazon Machine Image (AMI) in any 2 Availability Zones (AZ) in any AWS Region (it is recommended to use the Region that is closest to your customers). Use EC2 instance of T2 family (e.g. t2.micro or similar)
+
+Ensure that it has the following software installed:
+
+python
+ntp
+net-tools
+vim
+wget
+telnet
+epel-release
+htop
+Create an AMI out of the EC2 instance
+
+Prepare Launch Template For Nginx (One Per Subnet)
+
+Make use of the AMI to set up a launch template
+
+Ensure the Instances are launched into a public subnet
+
+Assign appropriate security group
+
+Configure Userdata to update yum package repository and install nginx
+
+Configure Target Groups
+
+Select Instances as the target type
+
+Ensure the protocol HTTPS on secure TLS port 443
+
+Ensure that the health check path is /healthstatus
+
+Register Nginx Instances as targets
+
+Ensure that health check passes for the target group
+
+Configure Autoscaling For Nginx
+
+Select the right launch template
+
+Select the VPC
+
+Select both public subnets
+
+Enable Application Load Balancer for the AutoScalingGroup (ASG)
+
+Select the target group you created before
+
+Ensure that you have health checks for both EC2 and ALB
+
+The desired capacity is 2
+
+Minimum capacity is 2
+
+Maximum capacity is 4
+
+Set scale out if CPU utilization reaches 90%
+
+Ensure there is an SNS topic to send scaling notifications
 
 - Change to super user
 
@@ -239,6 +360,25 @@ configure selinux policies for the webservers and nginx servers:
 
 Set Up Compute Resources for Webserver:
 
+Provision the EC2 Instances for Webservers
+
+Now, you will need to create 2 separate launch templates for both the WordPress and Tooling websites
+
+Create an EC2 Instance (Centos) each for WordPress and Tooling websites per Availability Zone (in the same Region).
+
+Ensure that it has the following software installed
+
+python
+ntp
+net-tools
+vim
+wget
+telnet
+epel-release
+htop
+php
+Create an AMI out of the EC2 instance
+
 - Change to super user
 
 `yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm`
@@ -260,6 +400,8 @@ configure selinux policies for the webservers and nginx servers:
 `setsebool -P httpd_execmem=1`
 
 `setsebool -P httpd_use_nfs 1`
+
+[Setsebool Success](./images/setsebool-output.PNG)
 
 - this section will instll amazon efs utils for mounting the target on the Elastic file system:
 
@@ -285,6 +427,18 @@ configure selinux policies for the webservers and nginx servers:
 
 [Update the etc file](./images/vi-etc-httpd.PNG)
 
+TLS Certificates From Amazon Certificate Manager (ACM)
+
+You will need TLS certificates to handle secured connectivity to your Application Load Balancers (ALB).
+
+Navigate to AWS ACM
+
+Request a public wildcard certificate for the domain name you registered in Freenom
+
+Use DNS to validate the domain name
+
+Tag the resource
+
 - Setting up self-signed certificate for the apache nginx instance:
 
 `vi /etc/httpd/conf.d/ssl.conf`
@@ -309,9 +463,13 @@ Nginx:
 
 [Nginx AMI](./images/nginx-ami-success.PNG)
 
-- Create Target Group:
+- Webserver:
 
 [Webserver AMI](./images/webserver-ami-config.PNG)
+
+[Webserver AMI](./images/webserver-ami-success.PNG)
+
+- Create Target Group for Nginx and Webserver:
 
 [Nginx Target Group](./images/nginx-targetgrp-create.PNG)
 
